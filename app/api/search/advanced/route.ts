@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       // Advanced CV search
       const { skills, minExperience, education, location, minScore } = filters || {};
 
-      const cvs = await db.cv.findMany({
+      const cvs = await db.cV.findMany({
         include: {
           user: {
             select: {

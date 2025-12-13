@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Briefcase, FileText, Users, Trophy, TrendingUp, BarChart3 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const session = await auth();
 
@@ -23,7 +25,7 @@ export default async function DashboardPage() {
         },
       },
     }),
-    db.cv.count(),
+    db.cV.count(),
     db.interviewAttempt.count(),
     db.hackathon.count({ where: { organizerId: employerId } }),
     db.freelancerProject.count({ where: { createdBy: employerId } }),
