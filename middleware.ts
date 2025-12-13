@@ -7,8 +7,13 @@ import { getToken } from "next-auth/jwt";
  */
 export async function middleware(request: NextRequest) {
   // Allow public routes
-  const publicRoutes = ["/login", "/auth"];
-  const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
+  const publicRoutes = ["/", "/login", "/auth"];
+  const isPublicRoute = publicRoutes.some((route) => {
+    if (route === "/") {
+      return request.nextUrl.pathname === "/";
+    }
+    return request.nextUrl.pathname.startsWith(route);
+  });
   if (isPublicRoute) {
     return NextResponse.next();
   }
