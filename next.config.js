@@ -5,6 +5,33 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      const fs = require('fs');
+      const path = require('path');
+      config.plugins.push({
+        apply(compiler) {
+          compiler.hooks.afterEmit.tap('EnsureDashboardClientRefManifest', () => {
+            try {
+              const target = path.join(
+                compiler.options.output.path,
+                'app',
+                '(dashboard)',
+                'page_client-reference-manifest.js'
+              );
+              fs.mkdirSync(path.dirname(target), { recursive: true });
+              if (!fs.existsSync(target)) {
+                fs.writeFileSync(target, '{}');
+              }
+            } catch (err) {
+              console.warn('Could not ensure dashboard client manifest:', err);
+            }
+          });
+        },
+      });
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {
