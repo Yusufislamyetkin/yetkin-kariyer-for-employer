@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/Ca
 import { Briefcase, FileText, Users, Trophy, TrendingUp, BarChart3 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function DashboardPage() {
   const session = await auth();
