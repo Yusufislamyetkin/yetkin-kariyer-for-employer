@@ -1,27 +1,32 @@
 import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
+/**
+ * Edge-safe auth gate for dashboard routes.
+ * Uses next-auth JWT token (works in middleware/edge) instead of server-side auth() helper.
+ */
 export async function middleware(request: NextRequest) {
-  const session = await auth();
-
-  // Public routes that don't require authentication
+  // Allow public routes
   const publicRoutes = ["/login", "/auth"];
   const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
-
-  // If accessing public route, allow
   if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  // If not authenticated, redirect to login
-  if (!session) {
+  // Use JWT token (edge compatible)
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "dev-secret",
+  });
+
+  if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // EMPLOYER-ONLY: Check if user is employer
-  const userRole = (session.user as any)?.role;
+  // Employer-only guard
+  const userRole = (token as any)?.role;
   if (userRole !== "employer") {
     return NextResponse.json(
       { error: "Unauthorized: Only employers can access this portal" },
