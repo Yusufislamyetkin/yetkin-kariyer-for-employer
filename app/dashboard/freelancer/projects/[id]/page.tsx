@@ -7,7 +7,7 @@ import Link from "next/link";
 import { FolderKanban, DollarSign, Calendar, Users, ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import AcceptBidButton from "./_components/AcceptBidButton";
+import AcceptBidButtonClient from "./_components/AcceptBidButtonClient";
 
 export default async function FreelancerProjectDetailPage({
   params,
@@ -117,9 +117,10 @@ export default async function FreelancerProjectDetailPage({
         <CardContent className="space-y-6">
           <div>
             <h3 className="font-semibold text-lg mb-2">Açıklama</h3>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-              {project.description}
-            </p>
+            <div 
+              className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap prose dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: project.description }}
+            />
           </div>
 
           {project.bids.length > 0 && (
@@ -179,10 +180,9 @@ export default async function FreelancerProjectDetailPage({
                               : "Beklemede"}
                           </span>
                           {project.status === "open" && bid.status === "pending" && (
-                            <AcceptBidButton
+                            <AcceptBidButtonClient
                               projectId={project.id}
                               bidId={bid.id}
-                              onSuccess={() => window.location.reload()}
                             />
                           )}
                         </div>

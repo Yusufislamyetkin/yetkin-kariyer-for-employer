@@ -79,10 +79,23 @@ function DashboardLayoutContent({
     return () => window.removeEventListener("resize", checkMobile);
   }, [checkMobile]);
 
+  // Map paths to their hub categories
+  const pathToHubMap: Record<string, string> = {
+    "/dashboard/jobs": "/dashboard/hub/is-yonetimi",
+    "/dashboard/freelancer": "/dashboard/hub/is-yonetimi",
+    "/dashboard/hackathons": "/dashboard/hub/is-yonetimi",
+    "/dashboard/cv-pool": "/dashboard/hub/aday-yonetimi",
+    "/dashboard/candidate-matcher": "/dashboard/hub/aday-yonetimi",
+    "/dashboard/interviews": "/dashboard/hub/aday-yonetimi",
+    "/dashboard/top-users": "/dashboard/hub/aday-yonetimi",
+    "/dashboard/messages": "/dashboard/hub/aday-yonetimi",
+    "/dashboard/analytics": "/dashboard/hub/aday-yonetimi",
+  };
+
   const navigationGroups: NavigationGroup[] = useMemo(() => {
     return [
       {
-        title: "Ana Menü",
+        title: "Anasayfa",
         items: [
           {
             name: "Dashboard",
@@ -95,24 +108,9 @@ function DashboardLayoutContent({
         title: "İş Yönetimi",
         items: [
           {
-            name: "İş İlanları",
-            href: "/dashboard/jobs",
+            name: "İş Yönetimi",
+            href: "/dashboard/hub/is-yonetimi",
             icon: Briefcase,
-          },
-          {
-            name: "İlan Şablonları",
-            href: "/dashboard/jobs/templates",
-            icon: FileText,
-          },
-          {
-            name: "Freelancer Projeler",
-            href: "/dashboard/freelancer/projects",
-            icon: FolderKanban,
-          },
-          {
-            name: "Hackathon'lar",
-            href: "/dashboard/hackathons",
-            icon: Trophy,
           },
         ],
       },
@@ -120,49 +118,9 @@ function DashboardLayoutContent({
         title: "Aday Yönetimi",
         items: [
           {
-            name: "Aday Eşleştirme",
-            href: "/dashboard/candidate-matcher",
-            icon: Search,
-          },
-          {
-            name: "CV Havuzu",
-            href: "/dashboard/cv-pool",
-            icon: FileText,
-          },
-          {
-            name: "Mülakat Sonuçları",
-            href: "/dashboard/interviews",
+            name: "Aday Yönetimi",
+            href: "/dashboard/hub/aday-yonetimi",
             icon: Users,
-          },
-          {
-            name: "Mülakat Takvimi",
-            href: "/dashboard/interviews/schedule",
-            icon: Calendar,
-          },
-          {
-            name: "Başarılı Kullanıcılar",
-            href: "/dashboard/top-users",
-            icon: Code,
-          },
-          {
-            name: "Mesajlar",
-            href: "/dashboard/messages",
-            icon: MessageSquare,
-          },
-          {
-            name: "Bildirimler",
-            href: "/dashboard/notifications",
-            icon: Bell,
-          },
-        ],
-      },
-      {
-        title: "Raporlama",
-        items: [
-          {
-            name: "Analytics",
-            href: "/dashboard/analytics",
-            icon: BarChart3,
           },
         ],
       },
@@ -174,9 +132,26 @@ function DashboardLayoutContent({
       if (!pathname) return false;
       if (pathname === href) return true;
       if (href === "/dashboard" || href === "/") return false;
+
+      // Check if current path belongs to this hub
+      for (const [path, hubPath] of Object.entries(pathToHubMap)) {
+        if (pathname.startsWith(path) && hubPath === href) {
+          return true;
+        }
+      }
+
+      // Check for exact matches
+      const hasExactMatch = navigationGroups.some((group) =>
+        group.items.some((item) => item.href !== href && pathname === item.href)
+      );
+
+      if (hasExactMatch) {
+        return false;
+      }
+
       return pathname.startsWith(`${href}/`);
     },
-    [pathname]
+    [pathname, navigationGroups]
   );
 
   return (

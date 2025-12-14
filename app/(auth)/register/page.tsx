@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/Card";
 import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
-import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
+import { UserPlus, Mail, Lock, User, AlertCircle } from "lucide-react";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    name: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,29 +24,34 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, role: "employer" }),
       });
 
-      if (result?.error) {
-        if (result.error === "Configuration") {
-          setError("Sunucu yapılandırma hatası. Lütfen yöneticiye başvurun.");
-        } else if (result.error === "CredentialsSignin") {
-          setError("Email veya şifre hatalı. Sadece işveren hesapları giriş yapabilir.");
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error) {
+          setError(data.error);
+        } else if (data.details && Array.isArray(data.details)) {
+          const errorMessages = data.details.map((err: any) => err.message).join(", ");
+          setError(errorMessages || "Geçersiz veri");
         } else {
-          setError(`Giriş yapılamadı: ${result.error}`);
+          setError("Kayıt başarısız. Lütfen tekrar deneyin.");
         }
-      } else if (result?.ok) {
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        setError("Giriş yapılamadı. Lütfen tekrar deneyin.");
+        return;
       }
+
+      router.push("/login?registered=true");
     } catch (error: any) {
-      console.error("Login error:", error);
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+      console.error("Register error:", error);
+      if (error.message && error.message.includes("fetch")) {
+        setError("Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+      }
     } finally {
       setLoading(false);
     }
@@ -54,27 +61,27 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 animate-fade-in">
         <div className="text-center">
-          <h1 className="text-4xl font-display font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-display font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
             YTK Career
           </h1>
           <p className="text-gray-600 dark:text-gray-400 font-medium text-lg">
-            İşveren Girişi
+            İşveren Kayıt
           </p>
         </div>
 
         <Card variant="glass" className="backdrop-blur-xl shadow-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
-              <LogIn className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              İşveren Girişi
+              <UserPlus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              İşveren Hesabı Oluştur
             </CardTitle>
             <CardDescription>
-              Sadece işveren hesapları bu platforma giriş yapabilir.{" "}
+              Zaten hesabınız var mı?{" "}
               <Link
-                href="/register"
+                href="/login"
                 className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
               >
-                Yeni hesap oluştur
+                Giriş yapın
               </Link>
             </CardDescription>
           </CardHeader>
@@ -89,12 +96,23 @@ export default function LoginPage() {
 
               <div className="space-y-4">
                 <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 z-10" />
+                  <Input
+                    type="text"
+                    placeholder="Adınız Soyadınız"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 z-10" />
                   <Input
                     type="email"
                     placeholder="Email adresi"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="pl-10"
                     required
                   />
@@ -103,11 +121,12 @@ export default function LoginPage() {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 z-10" />
                   <Input
                     type="password"
-                    placeholder="Şifre"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="En az 6 karakter"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="pl-10"
                     required
+                    minLength={6}
                   />
                 </div>
               </div>
@@ -119,12 +138,24 @@ export default function LoginPage() {
                 isLoading={loading}
                 disabled={loading}
               >
-                <LogIn className="h-4 w-4 mr-2" />
-                {loading ? "Giriş yapılıyor..." : "Giriş yap"}
+                <UserPlus className="h-4 w-4 mr-2" />
+                {loading ? "Kayıt yapılıyor..." : "Kayıt ol"}
               </Button>
             </form>
           </CardContent>
         </Card>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Zaten hesabınız var mı?{" "}
+            <Link
+              href="/login"
+              className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+            >
+              Giriş yapın
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

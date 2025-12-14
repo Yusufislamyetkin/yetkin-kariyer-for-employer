@@ -53,11 +53,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const { db } = await import("@/lib/db");
           let user;
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/a8c809a5-2e2a-4594-9201-a710299032db',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/auth.ts:authorize',message:'Before db.user.findUnique (login)',data:{email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
           try {
             user = await db.user.findUnique({
               where: { email },
             });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/a8c809a5-2e2a-4594-9201-a710299032db',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/auth.ts:authorize',message:'After db.user.findUnique - success (login)',data:{foundUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
           } catch (dbError: any) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/a8c809a5-2e2a-4594-9201-a710299032db',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/auth.ts:authorize',message:'db.user.findUnique failed (login)',data:{errorName:dbError?.name,errorMessage:dbError?.message,errorCode:dbError?.code,errorMeta:JSON.stringify(dbError?.meta||{})},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
             console.error("Database connection error:", dbError);
             throw new Error("Veritabanı bağlantı hatası. Lütfen daha sonra tekrar deneyin.");
           }

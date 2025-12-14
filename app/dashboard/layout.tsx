@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { DashboardLayoutClient } from "./layout-client";
+import { DashboardLayoutClient } from "@/app/dashboard/layout-client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -24,3 +24,4 @@ export default async function DashboardLayout({
 
   return <DashboardLayoutClient session={session}>{children}</DashboardLayoutClient>;
 }
+

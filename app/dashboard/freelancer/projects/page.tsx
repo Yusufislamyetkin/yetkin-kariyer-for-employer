@@ -260,9 +260,10 @@ export default function FreelancerProjectsPage() {
                     <FolderKanban className="h-5 w-5 text-blue-600" />
                     {project.title}
                   </CardTitle>
-                  <p className="text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
-                    {project.description}
-                  </p>
+                  <p 
+                    className="text-gray-600 dark:text-gray-400 line-clamp-2 mb-4"
+                    dangerouslySetInnerHTML={{ __html: project.description.replace(/<[^>]*>/g, '') }}
+                  />
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
                     {project.budget && (
                       <div className="flex items-center gap-1">
