@@ -11,7 +11,13 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function DashboardPage() {
-  const session = await auth();
+  let session;
+  try {
+    session = await auth();
+  } catch (error: any) {
+    console.error("Auth error in dashboard page:", error);
+    redirect("/login?error=auth_failed");
+  }
 
   if (!session || (session.user as any)?.role !== "employer") {
     redirect("/login");
@@ -20,7 +26,9 @@ export default async function DashboardPage() {
   const employerId = session.user?.id as string;
 
   // Get statistics
-  const [jobsCount, applicationsCount, cvsCount, interviewsCount, hackathonsCount, freelancerProjectsCount] = await Promise.all([
+  let jobsCount, applicationsCount, cvsCount, interviewsCount, hackathonsCount, freelancerProjectsCount;
+  try {
+    [jobsCount, applicationsCount, cvsCount, interviewsCount, hackathonsCount, freelancerProjectsCount] = await Promise.all([
     db.job.count({ where: { employerId } }),
     db.jobApplication.count({
       where: {
@@ -29,11 +37,21 @@ export default async function DashboardPage() {
         },
       },
     }),
-    db.cV.count(),
-    db.interviewAttempt.count(),
-    db.hackathon.count({ where: { organizerId: employerId } }),
-    db.freelancerProject.count({ where: { createdBy: employerId } }),
-  ]);
+      db.cV.count(),
+      db.interviewAttempt.count(),
+      db.hackathon.count({ where: { organizerId: employerId } }),
+      db.freelancerProject.count({ where: { createdBy: employerId } }),
+    ]);
+  } catch (error: any) {
+    console.error("Database error in dashboard page:", error);
+    // Set default values on error
+    jobsCount = 0;
+    applicationsCount = 0;
+    cvsCount = 0;
+    interviewsCount = 0;
+    hackathonsCount = 0;
+    freelancerProjectsCount = 0;
+  }
 
   const stats = [
     {

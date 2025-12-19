@@ -30,11 +30,13 @@ export default function LoginPage() {
 
       if (result?.error) {
         if (result.error === "Configuration") {
-          setError("Sunucu yapılandırma hatası. Lütfen yöneticiye başvurun.");
+          setError("Sunucu yapılandırma hatası. NEXTAUTH_SECRET veya AUTH_SECRET eksik olabilir. Lütfen yöneticiye başvurun.");
         } else if (result.error === "CredentialsSignin") {
           setError("Email veya şifre hatalı. Sadece işveren hesapları giriş yapabilir.");
+        } else if (result.error === "Veritabanı bağlantı hatası") {
+          setError("Veritabanı bağlantı hatası. Lütfen daha sonra tekrar deneyin.");
         } else {
-          setError(`Giriş yapılamadı: ${result.error}`);
+          setError(`Giriş yapılamadı: ${result.error}. Lütfen tekrar deneyin.`);
         }
       } else if (result?.ok) {
         router.push("/dashboard");
@@ -44,7 +46,13 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+      if (error.message && error.message.includes("Veritabanı")) {
+        setError(error.message);
+      } else if (error.message && error.message.includes("Network")) {
+        setError("Ağ bağlantı hatası. İnternet bağlantınızı kontrol edin.");
+      } else {
+        setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+      }
     } finally {
       setLoading(false);
     }
